@@ -1,0 +1,44 @@
+# Python & Flask ---
+__pycache__/
+*.py[cod]
+*.so
+instance/
+*.sqlite3
+*.db
+*.log
+
+# Konfiguracja lokalna ---
+.env
+config.env
+.python-version
+
+# Testy i cache ---
+.tox/
+.pytest_cache/
+.coverage
+
+# Buildy / paczki ---
+build/
+dist/
+*.egg-info/
+
+#  Docker (CI/CD only) ---
+Dockerfile
+docker-compose.yml
+*.tar
+*.img
+.dockerignore
+
+# IDE & OS ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Inne niepotrzebne pliki ---
+*.bak
+*.tmp
+*.swp
+*.orig
