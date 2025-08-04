@@ -1,0 +1,87 @@
+/* ========== default.css ========== */
+
+/* Import fontu z Google Fonts */
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap');
+
+/* Zmienne CSS */
+:root {
+  --font-family: 'Roboto', Arial, sans-serif;
+  --text-color: #fff;
+  --link-color: #888;
+  --link-hover: #333;
+  --bg-color: #f8d135;
+}
+
+/* Reset HTML + clearfix (do rozważenia usunięcia jeśli nieużywany) */
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+body, html {
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  text-size-adjust: 100%;
+  font-family: var(--font-family);
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Linki */
+a, a:visited {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover, a:active {
+  color: var(--link-hover);
+}
+
+/* Nagłówki */
+h1, h2, h3 {
+  font-family: var(--font-family);
+  font-weight: 300;
+  margin: 0;
+}
+
+h1 { font-size: 2.5em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.2em; font-weight: 400; }
+
+/* Header */
+.container .header {
+  padding: 5px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.container .header span {
+  font-size: 60%;
+  opacity: 0.8;
+  padding-bottom: 0.6em;
+  display: block;
+}
+
+/* Nawigacja górna */
+.nav-top {
+  background: rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  width: 100%;
+  font-size: 0.65em;
+  line-height: 2.6;
+  height: 36px;
+}
+
+.nav-top a {
+  padding: 0.41em 1em;
+  letter-spacing: 0.1em;
+  color: #444;
+  display: inline-block;
+}
+
+.nav-top a:hover {
+  background: rgba(255,255,255,0.95);
+  color: #333;
+}
