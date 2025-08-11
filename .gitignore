@@ -11,6 +11,7 @@ instance/
 # Konfiguracja lokalna ---
 .env
 config.env
+!config.env.example
 .python-version
 
 # Testy i cache ---
