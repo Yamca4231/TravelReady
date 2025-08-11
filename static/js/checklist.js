@@ -7,7 +7,7 @@ const STORAGE_KEY = "travelready_checked_items";
 
 // Zmienna globalna wewnątrz modułu (widoczna dla wszystkich funkcji)
 // Składana dynamicznie na podstawie protokołu i hosta bieżącej strony.
-const apiBase = `${window.location.protocol}//${window.location.hostname}:5000`;
+const apiBase = window.location.origin;
 
 export const Checklist = (() => {
   let strategy = "local"; // lub "api" w przyszłości

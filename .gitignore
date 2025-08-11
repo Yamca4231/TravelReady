@@ -33,7 +33,17 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
-lib/
+
+# Ignoruj katalog lib w katalogu głównym projektu
+/lib/
+
+# Ignoruj katalog lib w virtualenv
+venv/lib/
+ENV/lib/
+
+# Ale nie ignoruj katalogu lib w plikach statycznych frontendu
+!static/js/lib/
+
 lib64/
 parts/
 sdist/
