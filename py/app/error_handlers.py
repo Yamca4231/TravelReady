@@ -1,13 +1,11 @@
 # app/error_handlers.py
 # Obsługa wyjątków globalnych
 
-from flask import jsonify, current_app
+from flask import jsonify
+from app.validation import ValidationError
 
+# Rejestruje globalne obsługi błędów dla kodów HTTP i nieoczekiwanych wyjątków
 def register_error_handlers(app):
-    """
-    Rejestruje globalne obsługi błędów dla kodów HTTP i nieoczekiwanych wyjątków.
-    Logi są zapisywane za pomocą loggera aplikacji Flask (app.logger).
-    """
 
     @app.errorhandler(400)
     def bad_request(error):
@@ -43,3 +41,7 @@ def register_error_handlers(app):
             "message": "Wystąpił nieoczekiwany błąd",
             "type": error.__class__.__name__
         }), 500
+    
+    @app.errorhandler(ValidationError)
+    def _validation_err(e):
+        return jsonify({"status": "error", "message": str(e)}), 400

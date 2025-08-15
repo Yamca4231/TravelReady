@@ -1,4 +1,11 @@
+# requirements.txt
+
+# APP
 flask==2.3.2
 python-dotenv==1.1.0
 flask-cors==4.0.0
-gunicorn==21.2.0
+gunicorn==21.2.0        # tylko prod/Linux
+
+# Testy
+pytest==8.4.1           
+pytest-cov==6.2.1       # wtyczka do pytest generująca raporty pokrycia

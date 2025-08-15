@@ -19,6 +19,8 @@ def create_app():
         static_folder=STATIC_DIR,
         static_url_path="/static"
     )
+    # Ustawienie domyślnego limitu
+    app.config.setdefault("MAX_CHECKLIST_ITEMS", 200)
 
     # Załaduj klasę konfiguracyjną zależną od środowiska
     app.config.from_object(get_config_class())

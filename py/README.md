@@ -1,20 +1,21 @@
 # Aplikacja: TravelReady – Lista Pakowania na Wakacje
 
-**TravelReady** to aplikacja webowa umożliwiająca interaktywne zarządzanie listą rzeczy do spakowania. Wspiera checklistę z podziałem na kategorie oraz możliwość zaznaczania pozycji. Frontend działa w HTML + JavaScript, backend oparty jest na Python (Flask).
+**TravelReady** to aplikacja webowa do interaktywnego zarządzania listą rzeczy do spakowania. Frontend (HTML + JavaScript) komunikuje się z backendem Python/Flask. Checklista jest podzielona na kategorie; użytkownik może zaznaczać/odznaczać pozycje.
 
+Aplikacja obsługuje tryby DEV i PROD (konfiguracja w config.env).
 ---
 
 ## 📦 Funkcje
 
-- Backend API w Python/Flask (REST).
-- Frontend statyczny (HTML + JS).
-- Obsługa checklisty z możliwością lokalnego zapisu zaznaczeń użytkownika.
-- Renderowanie listy z podziałem na kategorie.
-- Zaznaczanie/odznaczanie elementów z zapisem do `localStorage` (hybrydowo).
-- Checklista renderowana dynamicznie po stronie klienta.
-- Kategorie i elementy checklisty zapisane są statycznie po stronie backendu (`items.py`).
+- REST API w Python/Flask.
+- Frontend statyczny (HTML + JS) z dynamicznym renderowaniem checklisty.
+- Zaznaczanie/odznaczanie pozycji, lokalny zapis (np. localStorage).
+- Kategorowanie elementów checklisty.
 - Interaktywny efekt paralaksy w tle (z wykorzystaniem JS).
 - Obsługa wielu środowisk (development / production) z jednego pliku `config.env`.
+- Logowanie błędów i mapowanie wyjątków walidacji na HTTP 400.
+- Centralna walidacja danych wejściowych po stronie backendu:
+typy, whitelista dozwolonych elementów, deduplikacja z zachowaniem kolejności, limit MAX_CHECKLIST_ITEMS.
 
 ## 📌 Planowane funkcje
 
@@ -29,18 +30,18 @@
 ## 📁 Struktura projektu
 
 htdocs/
-├── config.env              # Konfiguracja środowiska
-├── index.html              # Strona frontendowa
-├── css/                    # Style CSS
-├── js/                     # JavaScript + efekty
+├── config.env              # Konfiguracja środowiska (DEV/PROD)
+├── index.html              # Frontend (statyczny)
+├── css/                    # Style
+├── js/                     
 │ ├── checklist.js          # Logika checklisty i zapisu
-│ ├── main.js               # Inicjalizacja aplikacji
+│ ├── main.js               # Inicjalizacja
 │ ├── parallax-init.js
 │ └── lib/
 │     └── interactive-bg.js
 └── py/                     # Backend Flask
     ├── run.py              # Start dev
-    ├── wsgi.py             # Start prod
+    ├── wsgi.py             # Start prod (Gunicorn)
     ├── README.md
     ├── requirements.txt
     ├── config/
@@ -51,6 +52,7 @@ htdocs/
         ├── error_handlers.py
         ├── repository.py
         ├── storage.py
+        ├── validation.py       # centralna walidacja
         ├── data/
         │   ├── items.py               # Lista elementów
         │   └── checked_items.json     # Zaznaczone (lokalnie)
