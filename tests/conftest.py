@@ -1,11 +1,9 @@
 # tests/conftest.py
-"""
-- Dodanie katalogu 'py' do sys.path, aby importy 'from app ...' działały.
-"""
 
 import sys
 from pathlib import Path
 
+# Dodanie katalogu 'py' do sys.path, aby importy 'from app ...' działały.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PY_DIR = PROJECT_ROOT / "py"
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChecklistSchema",
+  "description": "Kontrakt odpowiedzi dla GET /api/checklist.",
+  "$comment": "Każda właściwość to sekcja; wartości to listy stringów.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  "minProperties": 1
+}
