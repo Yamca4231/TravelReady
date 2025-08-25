@@ -1,10 +1,13 @@
 # Travel Ready Tests:
 # Wymagania
     - Python 3.12
-    - pytest
-    - pytest-cov
+    - pytest==8.4.1 
+    - pytest-cov==6.2.1       # wtyczka do pytest generująca raporty pokrycia
+    - requests==2.32.3
+    - jsonschema ==4.25.0
+    - playwright>=1.45     
 
-## Zawartość 
+## Zawartość
 ```
 py/
   app/
@@ -19,16 +22,24 @@ tests/
     test_post_checked_dev.py          # testy integracyjne POST /api/checked
     schemas/
       checklist.schema.json           # kontrakt JSON dla GET /api/checklist
-
-pytest.ini                             # markery: unit/integration
+  e2e/
+    playwright_utils.py               # narzędzia E2E (Playwright)
+    playwright/
+      test_e2e_ui.py                  # TC-E-01/02/03 (UI) dla DEV/PROD
+artifacts/
+   e2e/                               # zrzuty .png/.html i wideo .webm z E2E
+pytest.ini                            # markery
+config.env                            # konfiguracja środowisk (DEV/PROD)
 ```
 
-## Integracja w projekcie (Do uzupełnienia o tetsy INTEGRACYJNE)
+## Integracja w projekcie 
 1. Skopiuj `py/app/validation.py`
-2. Skopiuj folder `tests/unit` i `tests/integration` do katalogu głównego.
-3. Upewnij się, że moduł `app.repository` zawiera klasę `ChecklistRepository`
+2. Skopiuj folder `tests` i do katalogu głównego.
+3. Zweryfikuj zawartość folderu `tests`: `unit`, `integration` i `e2e`
 4. Upewnij się, że `tests/conftest.py` dodaje katalog `py` do `sys.path` — dzięki temu importy `from app...` działają z pytest.
 5. Upewnij się, masz konfigurację środowisk w pliku `config.env`
+6. Zainstaluj bibliotekę playwright (requirements) i przeglądarkę Chromium (python -m playwright install chromium)
+
 
 ## Testy jednostkowe (Unit)
 > Testy jednostkowe dla `ChecklistRepository`oraz wydzielony moduł walidacji danych wejściowych dla `POST /api checked`.
@@ -36,7 +47,7 @@ pytest.ini                             # markery: unit/integration
 > Jeśli `ChecklistRepository` nie jest dostępny, testy dla repo zostaną **pominięte**.
 
 ### Uruchamianie
-Z poziomu katalogu głównego repozytorium (tam gdzie jest `tests/`):
+Z poziomu katalogu głównego repozytorium:
 
 ```bash
   # Testy jednostkowe
@@ -113,9 +124,9 @@ Oczekiwany wynik: identyczne jak validate_checked_payload — deduplikacja z zac
 
 ## Testy integracyjne
 
-> Testy integracyjne dla GET /api/checklist oraz POST /api/checked.
-> Wymagają uruchomionego backendu na DEV oraz dostępu do konfiguracji.
-> Jeśli brakuje API_BASE_URL_DEVELOPMENT lub endpointy nie odpowiadają, odpowiednie przypadki zostaną pominięte; na PROD testy modyfikujące są pomijane (TR_ENV=PROD).
+> Testy integracyjne dla `GET` `/api/checklist` oraz `POST` `/api/checked`.
+> **Wymagają** uruchomionego backendu na DEV oraz dostępu do konfiguracji.
+> Jeśli brakuje `API_BASE_URL_DEVELOPMENT` lub endpointy nie odpowiadają, odpowiednie przypadki zostaną pominięte; na PROD testy modyfikujące są pomijane (`TR_ENV=PROD`).
 
 ### Uruchamianie
 > Krok 1 — uruchom serwer z coverage (okno 1 PowerShell (w katalogu projektu)):
@@ -164,3 +175,59 @@ Oczekiwany wynik: dla (1), (2) i (3) 200/204.
 TC‑I‑03: POST /api/checked (negatywne)
 Scenariusz: dodaj element spoza dozwolonej listy.
 Oczekiwany wynik: kod 4xx (walidacja).
+
+## Testy e2e
+> Testy end-to-end UI dla strony głównej `Travel Ready`.
+> **Wymagają** działającego UI (HTML) oraz dostępu do konfiguracji (`config.env`). 
+> Jeśli `FRONT_BASE_URL_*` nie wskazuje na stronę HTML to odpowiednie przypadki zostaną **pominięte**.
+> Scenariusze modyfikujące TC-E-01, TC-E-03 działają wyłącznie na DEV.
+> Sanity read-only TC-E-02 działa wyłącznie na PROD.
+
+#### Uruchamianie
+> Krok 1 — Zweryfikuj czy Playwright jest zainstalowany (w katalogu projektu):
+```bash
+pip install playwright
+python -m playwright install chromium
+```
+>Krok 2 — uruchom aplikację (okno 1 (w katalogu projektu)):
+```bash
+  python py/run.py
+  # Zostaw to okno włączone (serwer działa).
+```
+> Krok 3 — odpal e2e (DEV TC-E-01 i TC-E-03, PROD TC-E-02)(okno 2)
+- DEV (TC-E-01, TC-E-03):
+```bash
+  $env:TR_ENV="DEV"; $env:E2E_VIDEO="on"; pytest tests/e2e -m "e2e" -ra
+```
+- PROD (TC-E-02 – read-only):
+```bash
+$env:TR_ENV="PROD"; $env:E2E_VIDEO="on"; pytest tests/e2e -m "e2e" -ra
+```
+
+## Artefakty
+Zrzuty ekranu zapisują się do `artifacts/e2e/`.
+
+### Co sprawdzamy
+- Persist (DEV) — zaznaczanie 3 pozycji checklisty i trwałość po odświeżeniu (`localStorage`).
+- Read-only sanity (PROD) — czy zwraca `200`, obecność <title>, widoczną sekcje checklista.
+Do tego sprawdzenieobecnośći [error] w konsoli i `4xx`/`5xx` przy ładowaniu CSS/JS.
+- Offline/fallback (DEV) — symulacja błędu sieci na endpointzie checklisty → UI prezentuje komunikat (np. „Błąd połączenia z API”) lub tryb offline.
+
+### Scenariusze & oczekiwane wyniki (e2e)
+- Persist
+
+TC-E-01: Persist localStorage
+Scenariusz: wyczyść localStorage → zaznacz 3 elementy → odśwież stronę.
+Oczekiwany wynik: po odświeżeniu te same 3 elementy są zaznaczone.
+
+- Read-only
+
+TC-E-02: Homepage sanity (PROD)
+Scenariusz: wejście na /; zbierz logi konsoli i statusy odpowiedzi dla CSS/JS.
+Oczekiwany wynik: 200 OK; <title> niepusty; sekcja checklisty widoczna; brak [error] w konsoli; brak 4xx/5xx przy ładowaniu CSS/JS.
+
+- Offline/fallback
+
+TC-E-03: Niedostępne API (DEV)
+Scenariusz: przechwyć żądania do endpointu checklisty i przerwij (symulacja net::ERR_FAILED), następnie otwórz /.
+Oczekiwany wynik: UI pokazuje komunikat o problemie z API / tryb offline.

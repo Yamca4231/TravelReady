@@ -11,3 +11,4 @@ pytest==8.4.1
 pytest-cov==6.2.1       # wtyczka do pytest generująca raporty pokrycia
 requests==2.32.3
 jsonschema ==4.25.0
+playwright>=1.45        
