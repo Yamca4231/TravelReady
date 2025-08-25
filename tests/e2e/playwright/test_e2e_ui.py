@@ -2,23 +2,7 @@
 # --------------------------------------------------------------------------------------
 # Testy E2E (UI) dla Travel Ready (DEV/PROD) – dostosowane do TR_ENV/TR_CONFIG
 # --------------------------------------------------------------------------------------
-# DO REDME:
-# Scenariusze:
-#   - TC-E-01 (DEV): Persist zaznaczeń (localStorage)
-#   - TC-E-02 (PROD): Read-only sanity (status 200, <title>, brak błędów w konsoli/assetach)
-#   - TC-E-03 (DEV): Fallback przy awarii API (symulacja błędu sieci na endpointzie checklisty)
-#
-# Sterowanie środowiskiem i artefaktami:
-#   - TR_ENV=DEV|PROD           -> wybór środowiska testów
-#   - TR_CONFIG=ścieżka/env     -> (opcjonalnie) niestandardowa lokalizacja pliku config.env
-#   - E2E_VIDEO=on|off          -> nagrywanie wideo Playwrighta
-#
-# Artefakty (zrzuty .png, wideo .webm, zrzuty DOM .html):
-#   - artifacts/e2e/
-#
-# Uruchomienie (DEV, z nagrywaniem) – PowerShell (jedna linia):
-#   $env:TR_ENV="DEV"; $env:E2E_VIDEO="on"; pytest tests/e2e -m e2e
-# --------------------------------------------------------------------------------------
+
 import os
 import time
 import pathlib
@@ -83,6 +67,7 @@ def base_url() -> str:
     if not base:
         pytest.skip(f"Brak FRONT/API BASE URL dla {TR_ENV} w {CONFIG_PATH} – pomijam E2E.")
     return base
+
 # Flaga nagrywania wideo (E2E_VIDEO)
 @pytest.fixture(scope="session")
 def record_video_flag() -> bool:

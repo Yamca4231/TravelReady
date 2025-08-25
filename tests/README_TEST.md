@@ -2,7 +2,7 @@
 # Wymagania
     - Python 3.12
     - pytest==8.4.1 
-    - pytest-cov==6.2.1       # wtyczka do pytest generująca raporty pokrycia
+    - pytest-cov==6.2.1       # raporty pokrycia
     - requests==2.32.3
     - jsonschema ==4.25.0
     - playwright>=1.45     
@@ -26,6 +26,8 @@ tests/
     playwright_utils.py               # narzędzia E2E (Playwright)
     playwright/
       test_e2e_ui.py                  # TC-E-01/02/03 (UI) dla DEV/PROD
+  smoke/
+    test_smoke_prod.py
 artifacts/
    e2e/                               # zrzuty .png/.html i wideo .webm z E2E
 pytest.ini                            # markery
@@ -35,7 +37,7 @@ config.env                            # konfiguracja środowisk (DEV/PROD)
 ## Integracja w projekcie 
 1. Skopiuj `py/app/validation.py`
 2. Skopiuj folder `tests` i do katalogu głównego.
-3. Zweryfikuj zawartość folderu `tests`: `unit`, `integration` i `e2e`
+3. Zweryfikuj zawartość folderu `tests`: `unit`, `integration`, `e2e` i `smoke`
 4. Upewnij się, że `tests/conftest.py` dodaje katalog `py` do `sys.path` — dzięki temu importy `from app...` działają z pytest.
 5. Upewnij się, masz konfigurację środowisk w pliku `config.env`
 6. Zainstaluj bibliotekę playwright (requirements) i przeglądarkę Chromium (python -m playwright install chromium)
@@ -204,7 +206,7 @@ python -m playwright install chromium
 $env:TR_ENV="PROD"; $env:E2E_VIDEO="on"; pytest tests/e2e -m "e2e" -ra
 ```
 
-## Artefakty
+### Artefakty
 Zrzuty ekranu zapisują się do `artifacts/e2e/`.
 
 ### Co sprawdzamy
@@ -231,3 +233,44 @@ Oczekiwany wynik: 200 OK; <title> niepusty; sekcja checklisty widoczna; brak [er
 TC-E-03: Niedostępne API (DEV)
 Scenariusz: przechwyć żądania do endpointu checklisty i przerwij (symulacja net::ERR_FAILED), następnie otwórz /.
 Oczekiwany wynik: UI pokazuje komunikat o problemie z API / tryb offline.
+
+## Testy dymne (smoke)
+
+> Lekki sanity-check środowiska PROD (read-only): publiczne endpointy `GET` z listy zdrowia (domyślnie: `/api/debug`, `/api/checklist`).
+> **Wymagają** działającego UI (HTML) oraz dostępu do konfiguracji (`config.env`).
+> Nie modyfikuje danych. Na PROD wykojuje weryfikacje tylko odczytem.
+> Jeśli brakuje `API_BASE_URL_PRODUCTION` lub endpointy nie odpowiadają, testy zostaną pominięte.
+
+#### Uruchamianie
+>Krok 1 — uruchom aplikację (okno 1 (w katalogu projektu)):
+```bash
+  python py/run.py
+  # Zostaw to okno włączone (serwer działa).
+```
+> Krok 2 — włącz smoke testy (okno 2)
+- PROD - łagodny próg (wystarczy ≥1 endpoint OK):
+```bash
+$env:TR_ENV="PROD"; pytest tests/smoke -m deploy -ra
+```
+- PROD - tryb ścisły (WSZYSTKIE endpointy):
+```bash
+$env:TR_ENV="PROD"; $env:SMOKE_STRICT="on"; pytest tests/smoke -m deploy -ra
+```
+
+### Co sprawdzamy
+- HTTP `200`.
+- Nagłówek `Content-Type` zawiera `json` (np. `application/json`; `charset=utf-8`).
+- Treść parsuje się do JSON.
+- Dla `/api/checklist` dodatkowo: JSON jest obiektem (dict).
+
+- Próg zaliczenia:
+  - domyślnie: ≥1 endpoint OK,
+  - `SMOKE_STRICT=on`: wszystkie endpointy z `SMOKE_HEALTH_PATHS` muszą przejść.
+
+### Scenariusze & oczekiwane wyniki (integration)
+
+TC-S-01: Health endpoints sanity (PROD)
+Scenariusz: pobierz każdy endpoint z listy SMOKE_HEALTH_PATHS (/api/debug, /api/checklist); oceń status, nagłówki i kontrakt; dla /api/checklist dodatkowo zweryfikuj, że JSON ma typ obiekt.
+Oczekiwany wynik:
+  - tryb łagodny: co najmniej jeden endpoint spełnia warunki,
+  - tryb ścisły (SMOKE_STRICT=on): wszystkie endpointy z listy OK
