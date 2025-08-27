@@ -38,6 +38,7 @@ export const Checklist = (() => {
       container.innerHTML = "";                                 // Czyszczenie zawartości kontenera
 
       renderChecklist(container, itemsByCategory, checkedItems);
+      try { window.__TR_STRATEGY__ = strategy; } catch(_) {}
     } catch (err) {
       console.error("❌ Błąd podczas pobierania danych checklisty:", err);
       showStatus("Błąd połączenia z API", "danger");
