@@ -11,15 +11,16 @@
 ```
 py/
   app/
-    validation.py             # centralna walidacja (POST /api/checked)
+    validation.py                     # centralna walidacja (POST /api/checked)
 tests/
-  conftest.py                 # dodaje 'py' do PYTHONPATH (importy app.*)
+  conftest.py                         # dodaje 'py' do PYTHONPATH (importy app.*)
   unit/
     test_checklist_repository.py      # testy jednostkowe repozytorium
     test_validation.py                # testy jednostkowe walidacji payloadu "checked"
   integration/
     test_api_contract.py              # testy integracyjne GET /api/checklist
     test_post_checked_dev.py          # testy integracyjne POST /api/checked
+    test_favicon.py                   # testy integracyjne favicon
     schemas/
       checklist.schema.json           # kontrakt JSON dla GET /api/checklist
   e2e/

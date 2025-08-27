@@ -1,6 +1,6 @@
 // js/checklist.js
 // Moduł zarządzający checklistą: pobieranie danych, renderowanie, zapamiętywanie stanu
-// TODO: Przywrócić zapis do API po implementacji backendu
+// API-first (fallback do localStorage)
 
 // Klucz do przechowywania lokalnych danych checklisty
 const STORAGE_KEY = "travelready_checked_items";
@@ -10,7 +10,7 @@ const STORAGE_KEY = "travelready_checked_items";
 const apiBase = window.location.origin;
 
 export const Checklist = (() => {
-  let strategy = "local"; // lub "api" w przyszłości
+  let strategy = "api"; // domyślnie API (fallback do localStorage)
   /**
    * Funkcja Checklist
    * Pobiera checklistę z API i renderuje ją na stronie.
@@ -20,7 +20,19 @@ export const Checklist = (() => {
     try {
       const res = await fetch(`${apiBase}/api/checklist`);      // Pobieranie listy elementów zgrupowanych wg kategorii
       const itemsByCategory = await res.json();                 // Parsowanie odpowiedzi jako JSON
-      const checkedItems = loadFromStorage();                   // [lista zaznaczonych z localStorage]
+
+// Spróbuj odczytać zaznaczenia z API; w razie problemu – z localStorage
+      let checkedItems = [];
+      try {
+        const r2 = await fetch(`${apiBase}/api/checked`);
+        if (r2.ok) {
+          checkedItems = await r2.json();
+        } else {
+          checkedItems = loadFromStorage();
+        }
+      } catch {
+        checkedItems = loadFromStorage();
+      }
       const container = document.getElementById("checklist");   // kontener DOM, w którym umieszcza listę
       if (!container) return;                                   // Bez kontenera nie ma co renderować
       container.innerHTML = "";                                 // Czyszczenie zawartości kontenera
@@ -79,10 +91,13 @@ export const Checklist = (() => {
     label.classList.add("ms-2");
     label.textContent = item;
 
-    // zapis lokalny
-    input.addEventListener("change", () => {
-      save();
-      showStatus("Zapisano ✅", "success");
+    // zapis lokalny – czekamy na wynik i dopiero wtedy pokazujemy komunikat
+    input.addEventListener("change", async () => {
+      const ok = await save();
+      if (ok) {
+        showStatus("Zapisano ✅", "success");
+      }
+      // w razie błędu saveToApi samo pokaże komunikat "Błąd zapisu do API"
     });
 
     // Złożenie struktury
@@ -96,26 +111,25 @@ export const Checklist = (() => {
    * Zbiera wszystkie zaznaczone elementy do localStorage
    * Dodatkowo informuje użytkownika o sukcesie lub błędzie.
    */
-  function save() {
+  async function save() {
     const checked = getCheckedItems();
 
     if (strategy === "local") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+      return true;
     } else if (strategy === "api") {
-      saveToApi(checked);
+      return await saveToApi(checked);
     }
+    return false;
   }
 
   /**
-   * Strategia odczytu – local lub api (na razie tylko local)
+   * Strategia odczytu – local lub api
    * Wczytuje zaznaczone elementy z localStorage
    */
   function loadFromStorage() {
-    if (strategy === "local") {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    }
-    return [];
   }
 
   /**
@@ -148,10 +162,18 @@ export const Checklist = (() => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(checked)
       });
-      if (!res.ok) throw new Error("Błąd zapisu na serwerze");
+      if (!res.ok) {
+        let detail = "";
+        try { detail = await res.text(); } catch {}
+        console.error("API error", res.status, detail);
+        showStatus("Błąd zapisu do API", "danger");
+        return false;
+      }
+      return true;
     } catch (err) {
       console.error("❌ Błąd zapisu checklisty do API:", err);
       showStatus("Błąd zapisu do API", "danger");
+      return false;
     }
   }
 
