@@ -41,7 +41,7 @@ def join():
         return f"{base}{endpoint}"
     return _j
 
-# Sprawdza status, Content-Type i zawartość favicon
+# TC-I-04: Sprawdza status, Content-Type i zawartość favicon
 def test_favicon_status_content_type_and_size(join):
     url = join("/static/images/favicon.ico")
     resp = requests.get(url, timeout=5)

@@ -9,14 +9,10 @@ import pathlib
 import pytest
 import requests
 
+# USTAWIENIA LOKALNE
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]                              # korzeń repo (.../TravelReady)
 CONFIG_PATH = pathlib.Path(os.getenv("TR_CONFIG", str(PROJECT_ROOT / "config.env")))    # Ścieżka do pliku konfiguracyjnego
 TR_ENV = os.getenv("TR_ENV", "DEV").upper()                                             # Wybór środowiska - DEV domyślnie
-
-# USTAWIENIA LOKALNE
-PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]  # .../TravelReady
-CONFIG_PATH = pathlib.Path(os.getenv("TR_CONFIG", str(PROJECT_ROOT / "config.env")))
-TR_ENV = os.getenv("TR_ENV", "DEV").upper()
 
 # Uruchomienie na PROD, pomija całe testy
 if TR_ENV == "PROD": pytest.skip("Testy POST są dozwolone wyłącznie na DEV (TR_ENV=DEV).", allow_module_level=True)
@@ -74,7 +70,7 @@ def allowed_items(join):
     data = resp.json()
     return _flatten_allowed(data)
 
-# TC-I-02: Pusta lista jest akceptowana (reset zaznaczeń)
+# TC-I-02 (część 1): Pusta lista jest akceptowana (reset zaznaczeń)
 def test_post_empty_list_is_accepted(join):
     url = join("/api/checked")
     payload = {"checked": []}   # pusta lista
@@ -83,7 +79,7 @@ def test_post_empty_list_is_accepted(join):
     assert resp.status_code in (200, 204), f"POST pustej listy powinien zwrócić 200/204, a zwrócił {resp.status_code}"
 
 
-# TC-I-02 (wariant pozytywny): Poprawny podzbiór elementów jest akceptowany
+# TC-I-02 (część 2): Poprawny podzbiór elementów jest akceptowany (Wariant pozytywny)
 def test_post_valid_subset_is_accepted(join, allowed_items):
     url = join("/api/checked")
     subset = allowed_items[:3] if allowed_items else []  # wybierz kilka pierwszych
@@ -92,7 +88,7 @@ def test_post_valid_subset_is_accepted(join, allowed_items):
     resp = requests.post(url, data=json.dumps(payload), headers=headers, timeout=5)
     assert resp.status_code in (200, 204), f"POST poprawnego zestawu powinien zwrócić 200/204, a zwrócił {resp.status_code}"
 
-# TC-I-02 (własność): Powtórny POST z tym samym payloadem
+# TC-I-02 (część 3): Własność - Powtórny POST z tym samym payloadem
 def test_post_is_idempotent_for_same_payload(join, allowed_items):
     url = join("/api/checked")
     subset = allowed_items[:2] if allowed_items else []
@@ -103,6 +99,100 @@ def test_post_is_idempotent_for_same_payload(join, allowed_items):
     r2 = requests.post(url, data=json.dumps(payload), headers=headers, timeout=5)
     assert r1.status_code in (200, 204) and r2.status_code in (200, 204), f"Powtarzalny POST powinien być bezbłędny (200/204), r1={r1.status_code}, r2={r2.status_code}"
 
+# TC-I-02 (część 4): Content-Type != application/json (oczekiwane 4xx)
+def test_variant_content_type_non_json_rejected(join, allowed_items):
+    url = join("/api/checked")
+    subset = allowed_items[:1] if allowed_items else []
+    # Wysyłamy poprawny JSON, ale z niewłaściwym Content-Type
+    resp = requests.post(
+        url,
+        data=json.dumps({"checked": subset}),
+        headers={"Content-Type": "text/plain"},
+        timeout=5
+    )
+    # DEBUG-only
+    """
+    print("\n[DEBUG malformed-json]")
+    print("URL:      ", url)
+    print("Status:   ", resp.status_code)
+    print("Req-CT:  ", (resp.request.headers.get("Content-Type") or ""))
+    print("Resp-CT:  ", (resp.headers.get("Content-Type") or ""))
+    print("Resp-Hdr: ", dict(resp.headers))
+    print("Resp-Body:", resp.text[:500])
+    """
+
+    assert 400 <= resp.status_code < 500, f"Oczekiwał 4xx dla niewłaściwego Content-Type, a zwrócił {resp.status_code}"
+
+# TC-I-02 (część 5): Uszkodzony JSON (oczekiwane 4xx)
+def test_variant_malformed_json_rejected(join):
+    url = join("/api/checked")
+    bad_body = '{"checked": [}' # celowo uszkodzony JSON
+    
+    resp = requests.post(
+        url,
+        data=bad_body,
+        headers={"Content-Type": "application/json"},
+        timeout=5
+    )
+
+    # DEBUG-only
+    """
+    print("\n[DEBUG malformed-json]")
+    print("URL:      ", url)
+    print("Status:   ", resp.status_code)
+    print("Req-CT:   ", "application/json")
+    print("Resp-CT:  ", (resp.headers.get("Content-Type") or ""))
+    print("Resp-Hdr: ", dict(resp.headers))
+    print("Resp-Body:", resp.text[:500])
+    """
+
+    assert 400 <= resp.status_code < 500, f"Oczekiwał kod błędu 4xx dla nieparsowalnego JSON, a zwrócił {resp.status_code}"
+
+# TC-I-02 (część 6): Duplikaty.
+def test_variant_duplicates_policy_documented(join, allowed_items):
+    url = join("/api/checked")
+    if not allowed_items:
+        pytest.skip("Brak listy dozwolonych elementów.")
+    item = allowed_items[0]
+    payload = {"checked": [item, item]}
+    r = requests.post(url, data=json.dumps(payload), headers={"Content-Type": "application/json"}, timeout=5)
+
+    assert r.status_code in (200, 204), r.text
+    get_r = requests.get(join("/api/checked"), timeout=5)
+    got = get_r.json()
+    # Oczekiwanie jednego wystąpienia elementu
+    assert got.count(item) == 1, f"Deduplikacja: Oczekiwał 1 wystąpienia '{item}', otrzymano {got.count(item)}; got={got}"
+    # DEBUG-only
+    #print(f"[PASS] TC-I-02(6) dedup — input=[{item},{item}] -> stored={got}")
+
+# TC-I-02 (część 7) - Over-limit - Długość listy > limit z config.env
+def test_variant_over_limit_rejected(join):
+    cfg = _read_env_file(CONFIG_PATH)
+    limit = int(cfg.get("MAX_CHECKLIST_ITEMS_DEVELOPMENT", "200"))
+
+    # Fallback, gdyby allowed_items było puste:
+    base = allowed_items or ["Paszport"]
+
+    # Zbuduj listę o długości (limit + 1) przez powielenie elementów bazowych
+    factor = (limit // len(base)) + 2
+    too_long = (base * factor)[:limit + 1]
+    assert len(too_long) == limit + 1  # sanity check testu
+
+    resp = requests.post(
+        join("/api/checked"),
+        data=json.dumps({"checked": too_long}),
+        headers={"Content-Type": "application/json"},
+        timeout=5
+    )
+    assert 400 <= resp.status_code < 500, f"Oczekiwał kodu błędu 4xx dla payloadu > {limit}, a zwrócił {resp.status_code}"
+
+# TC-I-02 (część 8): Method safety (niedozwolone metody -> 405)
+def test_variant_method_safety_put_delete(join):
+    url = join("/api/checked")
+    r_put = requests.put(url, data="{}", headers={"Content-Type": "application/json"}, timeout=5)
+    r_del = requests.delete(url, timeout=5)
+    assert r_put.status_code == 405 or r_put.status_code == 404, f"PUT jest zabroniony (405/404), a jest {r_put.status_code}"
+    assert r_del.status_code == 405 or r_del.status_code == 404, f"DELETE jest zabroniony (405/404), a jest {r_del.status_code}"
 
 # TC-I-03: Walidacja – element spoza listy jest odrzucany
 def test_post_unknown_item_is_rejected(join, allowed_items):
@@ -112,4 +202,4 @@ def test_post_unknown_item_is_rejected(join, allowed_items):
     payload = {"checked": base + [invalid]}
     headers = {"Content-Type": "application/json"}
     resp = requests.post(url, data=json.dumps(payload), headers=headers, timeout=5)
-    assert 400 <= resp.status_code < 500, f"Oczekiwano kodu 4xx dla niedozwolonego elementu, a zwrócono {resp.status_code}"
+    assert 400 <= resp.status_code < 500, f"Oczekiwał kodu błędu 4xx dla niedozwolonego elementu, a zwrócił {resp.status_code}"

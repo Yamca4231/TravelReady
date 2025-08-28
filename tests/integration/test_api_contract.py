@@ -15,9 +15,6 @@ PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]                      
 CONFIG_PATH = pathlib.Path(os.getenv("TR_CONFIG", str(PROJECT_ROOT / "config.env")))    # Ścieżka do pliku konfiguracyjnego
 TR_ENV = os.getenv("TR_ENV", "DEV").upper()                                             # Wybór środowiska - DEV domyślnie
 
-# Uruchomienie na PROD, pomija całe testy
-if TR_ENV == "PROD": pytest.skip("Testy POST są dozwolone wyłącznie na DEV (TR_ENV=DEV).", allow_module_level=True)
-
 pytestmark = [pytest.mark.integration]
 
 #  Prosty parser pliku config.env. Zwraca dict ze zmiennymi konfiguracyjnymi.
@@ -88,3 +85,17 @@ def test_checklist_minimal_content(join):
         assert isinstance(items, list), f"Sekcja '{section}' powinna mieć listę pozycji"
         for it in items:
             assert isinstance(it, str), "Pozycje w sekcji muszą być stringami"
+
+# TC-I-01 (część 4): Kontrakt GET /api/checked – status 200, Content-Type: application/json, body = lista[str]
+def test_tc_i_01_part4_get_checked_contract(join):
+    import requests
+    r = requests.get(join("/api/checked"), timeout=5)
+    assert r.status_code == 200, r.text
+
+    ct = (r.headers.get("Content-Type") or "").lower()
+    assert "application/json" in ct, f"Oczekiwano JSON, nagłówek Content-Type: {ct}"
+
+    body = r.json()
+    assert isinstance(body, list), f"Oczekiwano listy, jest: {type(body).__name__}"
+    for el in body:
+        assert isinstance(el, str), f"Element powinien być stringiem, jest: {type(el).__name__}"
