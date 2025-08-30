@@ -64,7 +64,7 @@ def base_url() -> str:
 # TC-S-01 – PROD only: Weryfikacja endpointów
 # ======================
 @PROD_ONLY
-def test_tc_s_01_health_endpoint_returns_json(base_url: str):
+def test_health_endpoint_returns_json(base_url: str):
     endpoints = [p.strip() for p in SMOKE_PATHS.split(",") if p.strip()]
     errors: list[str] = []
     ok_count = 0

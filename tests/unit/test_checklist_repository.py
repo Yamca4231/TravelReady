@@ -36,7 +36,7 @@ def test_get_all_items_returns_dict_with_sections():
         for it in items:
             assert isinstance(it, str), f"Element '{it}' in section '{section}' should be string"
 
-# TC-U-01: Wywołanie repo.get_all_items_flat() - pobranie płaskiej listy wszystkich pozycji 
+# TC-U-02: Wywołanie repo.get_all_items_flat() - pobranie płaskiej listy wszystkich pozycji 
 def test_get_all_items_flat_is_list_of_strings():
     ChecklistRepository = _load_repo()
     repo = ChecklistRepository()

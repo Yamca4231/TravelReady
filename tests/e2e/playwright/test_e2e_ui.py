@@ -159,7 +159,7 @@ def assert_offline_fallback(page, timeout_ms: int = 6000):
 # TC-E-01 – DEV only: Persist zaznaczeń (localStorage)
 # ======================
 @DEV_ONLY
-def test_tc_e_01_persistence_localstorage_dev(base_url, record_video_flag):
+def test_persistence_localstorage(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, _ctx):
         # 1) Wejście na UI, krotki timeout, artefakty startowe (PNG/HTML)
         goto_ready(page, base_url, "TC_E_01")
@@ -204,7 +204,7 @@ def test_tc_e_01_persistence_localstorage_dev(base_url, record_video_flag):
 # TC-E-02 – PROD only: Read-only (200, <title>, brak błędów w konsoli/assetach)
 # ======================
 @PROD_ONLY
-def test_tc_e_02_homepage_readonly_prod(base_url, record_video_flag):
+def test_homepage_readonly(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, _ctx):
         # 1) Nasłuch błędów
         console_logs, response_errors = [], []
@@ -226,7 +226,7 @@ def test_tc_e_02_homepage_readonly_prod(base_url, record_video_flag):
 # TC-E-03 – DEV only: Fallback przy awarii API
 # ======================
 @DEV_ONLY
-def test_tc_e_03_fallback_api_unavailable_dev(base_url, record_video_flag):
+def test_fallback_api_unavailable(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, ctx):
         api_paths = [p.strip() for p in TR_CHECKLIST_PATH.split(",") if p.strip()] or ["/api/checklist"]
 
