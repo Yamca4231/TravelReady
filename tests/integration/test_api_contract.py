@@ -43,7 +43,7 @@ def join():
         return f"{base}{endpoint}"
     return _j
 
-# TC-I-01 (Część 1): Endpoint żyje i zwraca JSON (status + nagłówki).
+# TC-I-01 (część 1): Endpoint żyje i zwraca JSON (status + nagłówki).
 def test_checklist_status_and_headers(join):
     url = join("/api/checklist")
     resp = requests.get(url, timeout=5) # timeout (5 s) chroni przed wiszącym zapytaniem.
@@ -87,7 +87,7 @@ def test_checklist_minimal_content(join):
             assert isinstance(it, str), "Pozycje w sekcji muszą być stringami"
 
 # TC-I-01 (część 4): Kontrakt GET /api/checked – status 200, Content-Type: application/json, body = lista[str]
-def test_tc_i_01_part4_get_checked_contract(join):
+def test_get_checked_contract(join):
     import requests
     r = requests.get(join("/api/checked"), timeout=5)
     assert r.status_code == 200, r.text
