@@ -1,13 +1,26 @@
 /* ===================== style.css ===================== */
 
-/* Ustawienia ogólne */
+
+/* ========== 1) Zmienne i motywy tła ========== */
+:root {
+  /* Domyślny motyw – DUSK */
+  --bg-1: #f2f5ef; /* jasna szałwia */
+  --bg-2: #fff2e7; /* delikatna brzoskwinia */
+}
+
+/* --- SAGE–GOLD (pod zieleń zboczy + golden hour) --- */
+[data-theme="sage-gold-soft"]{
+  --bg-1: #f3f6ea; /* bazowa: bardzo jasna szałwia */
+  --bg-2: #d4c9b5; /* ciepły „piaskowo-miodowy” (golden hour) */
+  --bg-3: #dde8c7; /* jasna szałwia/oliwka (zielony akcent) */
+}
+
+/* ========== 2) Bazowe ========== */
 html, body {
   margin: 0;
   padding: 0;
-  height: auto;
   min-height: 100%;
   text-align: center;
-  position: relative;
   background: transparent;
   font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
@@ -20,34 +33,156 @@ header h1 {
   font-weight: 500;
 }
 
-#mainNavbar {
-  width: 100%;
+/* Warstwowy gradient */
+body{
+  background:
+    radial-gradient(1100px 520px at 14% -8%,  var(--bg-3) 0%, transparent 64%),
+    radial-gradient(1100px 520px at 86% 108%, var(--bg-2) 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 48%, var(--bg-1) 100%);
+  background-attachment: fixed, fixed, fixed;
+  background-repeat: no-repeat;
 }
 
-/* Sekcja checklisty */
-.main {
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #333;
+/* ========== 3) Navbar (glass) ========== */
+/* półprzezroczyste tło i warstwa ponad obrazem */
+.navbar-clear{
+  background: rgba(255,255,255,0.28);
+  backdrop-filter: blur(10px) saturate(120%);
+  border-bottom: 1px solid rgba(255,255,255,0.22);
+  position: sticky; top: 0; z-index: 5;
+  z-index: 5; /* ważne, żeby nie chowało się za obrazem */
+}
+
+/* ========== 4) Hero / paralaksa ========== */
+/* Interaktywne tło */
+.ibg-container {
   position: relative;
-  z-index: 100;
-  width: 100%;
-  max-width: 980px;
-  margin: 25px auto;
-  padding: 20px;
-  border-radius: 10px;
-  box-sizing: border-box;
+  color: white;
 }
 
-/* Kontener checklisty */
+.ibg-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  width: 100%;
+  min-height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+
+.parallax-band { 
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  border: 0;
+}
+
+.parallax-band { height: 324px !important; }          /* <576px */
+@media (min-width: 576px) { .parallax-band { height: 360px !important; } }
+@media (min-width: 768px) { .parallax-band { height: 432px !important; } }
+@media (min-width: 992px) { .parallax-band { height: 504px !important; } }
+@media (min-width: 1200px){ .parallax-band { height: 576px !important; } }
+
+.parallax-band .ibg-bg {
+  height: 100% !important;
+  width: 100%;
+/* Wygaszanie wyłącznie tła (dziecko generowane przez plugin) */
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 90%);
+          mask-image: linear-gradient(to bottom, #000 60%, transparent 90%);
+}
+
+/* lekkie przyciemnienie zdjęcia, by napis był czytelny */
+.parallax-band::after {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.15));
+}
+
+/* delikatne wygaszenie do bieli przy dolnej krawędzi zdjęcia */
+.parallax-band::after{
+  content:"";
+  position:absolute; left:0; right:0; bottom:0;
+  height: 56px;
+  pointer-events:none;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.85));
+}
+
+.parallax-caption {
+  position: absolute;
+  inset: 0;                    /* zajmij cały obszar obrazka */
+  display: flex;
+  flex-direction: column;
+  align-items: center;         /* wyśrodkuj poziomo */
+  justify-content: center;     /* wyśrodkuj pionowo */
+  text-align: center;          /* wyrównanie tekstu */
+  padding: 0 1rem;             /* marginesy wewnętrzne na mobile */
+  z-index: 2;
+  right: 1rem;         /* pozwala zawijać tekst na małych ekranach */
+}
+
+.parallax-caption > * { max-width: 980px; }
+
+.caption-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(1.125rem, 4.5vw, 2.25rem);
+  color: #fff;
+  -webkit-text-stroke: 2px #000; 
+  paint-order: stroke fill;
+  text-shadow:
+    1px 0 0 #000, -1px 0 0 #000,
+    0 1px 0 #000,  0 -1px 0 #000,
+    1px 1px 0 #000, -1px -1px 0 #000,
+    1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+.caption-header {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(0.675rem, 2.7vw, 1.35rem); /* 1.125, 4.5vw, 2.25 × 0.25 */
+  -webkit-text-stroke: 1px #000; /* cieńszy obrys przy tak małej czcionce */
+  color: #fff;
+  paint-order: stroke fill;
+  /* Fallback obrysu dla Firefox: */
+  text-shadow:
+    1px 0 0 #000, -1px 0 0 #000,
+    0 1px 0 #000,  0 -1px 0 #000,
+    1px 1px 0 #000, -1px -1px 0 #000,
+    1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+/* Slogan (h2) – biały + miękki cień */
+.hero-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 5vw, 2.5rem); /* ~24–40px */
+  color: #fff;
+  text-shadow: 0 6px 20px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.35);
+}
+
+.hero-sub {
+  margin: .35rem 0 0;
+  font-weight: 600;
+  font-size: clamp(0.95rem, 2.8vw, 1.125rem); /* ~15–18px */
+  color: #eef2ff;
+  text-shadow: 0 4px 14px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Małe ekrany – odsuń trochę bardziej od krawędzi */
+@media (max-width: 600px) {
+  .parallax-caption { left: 0.75rem; right: 0.75rem; bottom: 1rem; }
+}
+
+/* ========== 5) Checklist (karta, siatka, elementy) ========== */
 .checklist-box {
   width: 90vw;
-  max-width: 2560px;
+  max-width: 1200px;
   min-width: 300px;
   margin: 2rem auto;
   padding: 2rem;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(6px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 1.2);
   border-radius: 12px;
   color: #4a4a4a;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -59,9 +194,7 @@ header h1 {
   transform: scale(1.1);
 }
 
-/* Elementy listy */
-#checklist,
-.checklist-grid {
+#checklist,.checklist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
@@ -70,9 +203,7 @@ header h1 {
   margin: 0 auto;
 }
 
-#checklist li,
-.checklist-grid li,
-.main li {
+#checklist li, .checklist-grid li{
   background-color: rgba(255, 255, 255, 0.15);
   padding: 10px;
   display: flex;
@@ -87,44 +218,30 @@ header h1 {
 }
 
 /* Nagłówki kategorii */
-#checklist h3,
-.checklist-grid h3 {
+#checklist h3, .checklist-grid h3 {
   grid-column: 1 / -1;
-  margin: 1.5em 0 0.4em;
-  font-size: 1.3em;
-  font-weight: 600;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  margin: 1.25rem 0 .35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-shadow: none;
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .25rem .6rem;
+  background: rgba(243,244,246,.85); /* gray-100 */
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 999px;
 }
 
-/* Interaktywne tło */
-.ibg-container {
-  position: relative;
-  overflow: hidden;
-  height: auto;
-  min-height: 100vh;
-  color: white;
-}
-
-.ibg-bg {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  width: 100%;
-  min-height: 100%;
-  background-size: cover;
-  background-position: center;
-  z-index: -1;
-}
-
-/* Responsywność */
+/* Drobna dostępność: mniejsza czcionka elementów listy na bardzo wąskich ekranach */
 @media screen and (max-width: 600px) {
-  .main {
-    width: 90%;
-    padding: 10px;
-  }
+  ul#checklist li { font-size: 1em; line-height: 1.5; }
+}
 
-  ul#checklist li {
-    font-size: 1em;
-    line-height: 1.5;
-  }
+/* ========== 6) Overlap karty nad hero (opcjonalne) ========== */
+
+/* Karta ma nachodzić na hero i mieć priorytet warstw */
+.overlap-hero {
+  margin-top: clamp(-80px, -10vw, -160px);  /* podnieś nad krawędź zdjęcia */
+  position: relative;
+  z-index: 3;
 }
