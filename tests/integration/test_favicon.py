@@ -50,7 +50,7 @@ def test_favicon_status_content_type_and_size(join):
 
     # 2) Nagłówek Content-Type
     ct = resp.headers.get("Content-Type", "").lower()
-    assert any(t in ct for t in ["image/x-icon", "image/ico"]), f"Nieprawidłowy Content-Type: {ct}"
+    assert any(t in ct for t in ["image/vnd.microsoft.icon", "image/x-icon", "image/ico"]), f"Nieprawidłowy Content-Type: {ct}"
 
     # 3) Rozmiar treści
     assert len(resp.content) > 0, "Favicon nie może być pusty."
