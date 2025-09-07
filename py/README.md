@@ -22,7 +22,10 @@ Aplikacja obsługuje tryby DEV i PROD (konfiguracja w config.env).
   - limit długości MAX_CHECKLIST_ITEMS
 
 ### Dodane w 1.2.0:
-- Wersje wieloużytkownikowe (checklista per użytkownik).
+- Wersje wieloużytkownikowe (checklista per użytkownik) – identyfikacja ciasteczkiem tr_uid, zapis przez API.
+
+### Dodane w 1.2.1:
+- Poprawa frontu i styli
 
 ## 📌 Planowane funkcje
 - Edycja checklisty po stronie użytkownika (dodawanie/edycja kategorii).
@@ -113,9 +116,6 @@ python py/run.py
 ```
 http://localhost:5000
 ```
-
-7. Aplikacja automatycznie załaduje frontend z katalogu `htdocs/` oraz checklistę z backendu.
-
 ---
 
 ## OLD VERSION Apache host - STILL WORKING (Manual)
@@ -133,7 +133,7 @@ http://localhost:5000
 
 ---
 
-## 💻 Tryb deweloperski – wdrożenie automatyczne (CI/CD z GitLab)
+## 💻 Tryb deweloperski – wdrożenie automatyczne (CI/CD z GitLab) TO DO
 
 1. Upewnij się, że w repozytorium znajduje się plik `.gitlab-ci.yml`. Przykład konfiguracji:
 ```yaml
@@ -159,7 +159,7 @@ deploy_development:
 
 ---
 
-## 🌍 Tryb produkcyjny – wdrożenie ręczne (manualne)
+## 🌍 Tryb produkcyjny – wdrożenie ręczne (manualne) DO WERYFIKACJI
 
 1. Skopiuj cały katalog `TravelReady/` na serwer, np. do `/opt/travelready/`:
 ```bash
@@ -216,7 +216,7 @@ export TRAVELREADY_ENV=production
 
 ---
 
-## 🚀 Tryb produkcyjny – wdrożenie automatyczne (CI/CD z GitLab)
+## 🚀 Tryb produkcyjny – wdrożenie automatyczne (CI/CD z GitLab) TO DO
 
 1. Ustaw plik `.gitlab-ci.yml` z poniższą konfiguracją (przykład):
 ```yaml
@@ -276,7 +276,7 @@ export TRAVELREADY_ENV=development     # Linux/macOS
 set TRAVELREADY_ENV=development        # Windows (CMD)
 
 
-## 🛠️ CI/CD z GitLab (planowana funkcja)
+## 🛠️ CI/CD z GitLab (planowana funkcja) TO DO
 
 Wdrożenie aplikacji może zostać zautomatyzowane za pomocą GitLab CI/CD. Aktualna konfiguracja umożliwia automatyczne:
 

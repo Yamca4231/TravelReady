@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pl" class="no-js demo5">
+<html lang="pl">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover"> 
 		<title>Travel Ready – Lista Pakowania</title>
 		<meta name="description" content="Interaktywna lista rzeczy do zabrania na wakacje." />
-  		<meta name="keywords" content="checklista, wakacje, pakowanie, flask, php" />
+  		<meta name="keywords" content="checklista, wakacje, pakowanie" />
 		
 		<link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
 
@@ -23,37 +23,63 @@
 		<!-- jQuery i interactive_bg -->
 		<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	</head>
-	<body>
-		<div class="container-fluid ibg-container position-relative" data-ibg-bg="/travelready/static/images/bg.jpg"> 
+	<body data-theme="sage-gold-soft">
+
+		<div class="container-fluid px-0 ibg-container  parallax-band" data-ibg-bg="/travelready/static/images/bg.jpg"> 
 
 			<!-- Nagłówek -->
-			<header class="text-center py-4">
-				<h1>Travel Ready</h1>	
-			</header>
-
-			<!-- Menu -->
-			<nav class="navbar navbar-expand-md navbar-dark navbar-clear">
+			<nav class="navbar navbar-expand-lg  navbar-light navbar-clear">
 				<div class="container-fluid">
-					<div class="collapse navbar-collapse" id="mainNavbar">
-						<ul class="navbar-nav mx-auto"></ul>
+					
+					<a class="navbar-brand" href="#"><h1 class="caption-title">✈️ Travel Ready</h1></a>
+
+					<!-- hamburger na mobile -->
+					<button class="navbar-toggler" type="button"
+							data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+							aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Przełącz nawigację">
+					<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+						<!-- link do checklisty (przewija do sekcji) -->
+						
+						<li class="nav-item"><a class="nav-link active" aria-current="page" href="#"><p class="caption-header">Home</p></a></li>
+						<li class="nav-item"><a class="nav-link" href="#about"><p class="caption-header">O projekcie</p></a></li>
+						<li class="nav-item"><a class="nav-link" href="#contact"><p class="caption-header">Kontakt</p></a></li>
+					
+					</ul>
 					</div>
 				</div>
 			</nav>
-
-			<!-- Checklist -->
-			<main class="container checklist-box rounded p-4 my-3">
-				<h2 class="fw-bold">✈️ Twoja osobista lista pakowania na wakacje</h2>
-
-				<!-- Formularz checklisty -->
-				<form id="checklist-form">
-					<div id="checklist" class="checklist-grid"></div>
-				</form>
-				<div id="status" class="alert d-none mt-3" role="alert"></div>
-			</main>
+			<div class="parallax-caption">
+				<h2 class="hero-title">Twoja osobista lista pakowania na wakacje</h2>
+				<p class="hero-sub">Zaznaczaj rzeczy, zapisuj postęp i pakuj się bez stresu.</p>
+			</div>
 		</div>	
-		
+			<!-- Główna karta -->
+			<main class="container px-4">
+				<section class="overlap-hero">
+				<div class="p-4 p-md-5">
+					
+					<!-- Formularz checklisty -->
+					<form id="checklist-form">
+						<div id="checklist" class="checklist-grid"></div>
+					</form>
+					<div id="status" class="alert d-none mt-3" role="alert"></div>
+				</div>	
+    			</section>
+				
+				<!-- Stopka -->
+				<footer class="py-4 text-center small text-muted">
+					<p>© <span id="year"></span> Travel Ready • Wersja demonstracyjna</p>
+				</footer>
+  			</main>
+			
 		<!-- Skrypty JS -->
 		<script type="module" src="js/main.js"></script>
+
 		<!-- Bootstrap Bundle JS -->
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
