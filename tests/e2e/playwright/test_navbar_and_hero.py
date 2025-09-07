@@ -6,6 +6,8 @@
 import os
 import re
 import time
+import sys
+import pathlib
 from pathlib import Path
 import pytest
 from contextlib import contextmanager
@@ -17,9 +19,7 @@ from playwright_utils import (
     launch_browser, new_context, save_artifacts, dump_html, wait_ui_ready
 )
 
-# ---------------------------------------
-# USTAWIENIA / POMOCNICZE (jak w test_e2e_ui.py)
-# ---------------------------------------
+# USTAWIENIA LOKALNE
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
 CONFIG_PATH  = pathlib.Path(os.getenv("TR_CONFIG", str(PROJECT_ROOT / "config.env")))
 TR_ENV       = os.getenv("TR_ENV", "DEV").upper()
@@ -52,6 +52,10 @@ def _front_base_url(cfg: dict, env: str) -> str:
     else:
         return (cfg.get("API_BASE_URL_PRODUCTION") or "").rstrip("/")
 
+# Helper - Interpretacja wartości logicznych (E2E_VIDEO)
+def _env_true(v: str) -> bool:
+    return str(v).lower() in ("1", "true", "on", "yes")
+
 # Nazwa artefaktu z timestampem
 def _artifact_name(prefix: str) -> str:
     ts = time.strftime("%Y%m%d-%H%M%S")
@@ -71,6 +75,11 @@ def base_url() -> str:
     if not base:
         pytest.skip(f"Brak FRONT/API BASE URL dla {TR_ENV} w {CONFIG_PATH} – pomijam E2E.")
     return base
+
+# Flaga nagrywania wideo (E2E_VIDEO)
+@pytest.fixture(scope="session")
+def record_video_flag() -> bool:
+    return _env_true(os.getenv("E2E_VIDEO", "off"))
 
 # Obsługa cyklu życia przeglądarki/kontekstu/strony.
 @contextmanager
@@ -102,9 +111,9 @@ def goto_ready(page, url: str, name_prefix: str):
 # ======================
 # TC-E-04 – Navbar: sticky/fixed + top z-index  (DEV/PROD)
 # ======================
-def test_navbar_sticky_and_top_zindex(base_url):
-    with browser_page() as (page, _ctx):
-        goto_ready(page, base_url, "TC_FE_navbar")
+def test_navbar_sticky_and_top_zindex(base_url, record_video_flag):
+    with browser_page(record_video_flag) as (page, _ctx):
+        goto_ready(page, base_url, "TC_E_04")
 
         nav = page.locator(".navbar.navbar-clear")
         assert nav.is_visible(), "Navbar powinien być widoczny."
@@ -124,10 +133,10 @@ def test_navbar_sticky_and_top_zindex(base_url):
 # ======================
 # TC-E-05 – Navbar (mobile): hamburger otwiera menu  (DEV/PROD)
 # ======================
-def test_hamburger_opens_on_mobile(base_url):
-    with browser_page() as (page, _ctx):
+def test_hamburger_opens_on_mobile(base_url, record_video_flag):
+    with browser_page(record_video_flag) as (page, _ctx):
         page.set_viewport_size({"width": 390, "height": 844})
-        goto_ready(page, base_url, "TC_FE_nav_mobile")
+        goto_ready(page, base_url, "TC_E_05")
 
         toggler = page.locator(".navbar-toggler")
         assert toggler.is_visible(), "Toggler (hamburger) powinien być widoczny na mobile."
@@ -135,21 +144,18 @@ def test_hamburger_opens_on_mobile(base_url):
         toggler.click()
 
         menu = page.locator("#navbarSupportedContent")
-        # Po kliknięciu Bootstrap ustawia aria-expanded="true" na togglerze…
-        aria = toggler.get_attribute("aria-expanded")
-        assert aria == "true", f"Po kliknięciu aria-expanded={aria}, oczekiwano 'true'."
-
-        # …i dodaje 'show' do klasy elementu collapse
-        classes = (menu.get_attribute("class") or "")
-        assert re.search(r"\bshow\b", classes), f"Menu powinno mieć klasę 'show', class='{classes}'."
-        assert menu.is_visible(), "Menu powinno być widoczne po rozwinięciu."
+        # Po kliknięciu Bootstrap: auto-wait na zmianę atrybutów/klas (animacja collapsing -> show)
+        from playwright.sync_api import expect
+        expect(toggler).to_have_attribute("aria-expanded", "true")
+        expect(menu).to_have_attribute("class", re.compile(r"\bshow\b"))
+        expect(menu).to_be_visible()
 
 # ======================
 # TC-E-06 – Hero caption: widoczność i czytelność  (DEV/PROD)
 # ======================
-def test_hero_caption_visible_and_readable(base_url):
-    with browser_page() as (page, _ctx):
-        goto_ready(page, base_url, "TC_FE_hero_caption")
+def test_hero_caption_visible_and_readable(base_url, record_video_flag):
+    with browser_page(record_video_flag) as (page, _ctx):
+        goto_ready(page, base_url, "TC_E_06")
 
         caption = page.locator(".parallax-caption")
         assert caption.is_visible(), "Sekcja .parallax-caption powinna być widoczna."
