@@ -1,6 +1,6 @@
 # Aplikacja: TravelReady – Lista Pakowania na Wakacje
 
-**TravelReady** to aplikacja webowa do interaktywnego zarządzania listą rzeczy do spakowania. Frontend (HTML + JavaScript) komunikuje się z backendem Python/Flask. Checklista jest podzielona na kategorie; użytkownik może zaznaczać/odznaczać pozycje.
+**TravelReady** to aplikacja webowa do interaktywnego zarządzania listą rzeczy do spakowania. Frontend (HTML + JavaScript) komunikuje się z backendem Python/Flask. Checklista jest pogrupowana na kategorie; użytkownik może zaznaczać/odznaczać pozycje.
 
 Aplikacja obsługuje tryby DEV i PROD (konfiguracja w config.env).
 ---
@@ -9,58 +9,75 @@ Aplikacja obsługuje tryby DEV i PROD (konfiguracja w config.env).
 
 - REST API w Python/Flask.
 - Frontend statyczny (HTML + JS) z dynamicznym renderowaniem checklisty.
-- Zaznaczanie/odznaczanie pozycji, lokalny zapis (np. localStorage).
+- Dwa tryby zapisu zaznaczeń:
+    - API (per-user) – zapis po stronie serwera w pliku JSON użytkownika (identyfikacja przez ciasteczko tr_uid),
+    - Local – zapis w localStorage.
 - Kategorowanie elementów checklisty.
 - Interaktywny efekt paralaksy w tle (z wykorzystaniem JS).
 - Obsługa wielu środowisk (development / production) z jednego pliku `config.env`.
-- Logowanie błędów i mapowanie wyjątków walidacji na HTTP 400.
-- Centralna walidacja danych wejściowych po stronie backendu:
-typy, whitelista dozwolonych elementów, deduplikacja z zachowaniem kolejności, limit MAX_CHECKLIST_ITEMS.
+- Globalna obsługa błędów (400/404/500) i logowanie.
+- Walidacja po stronie backendu w ChecklistService:
+  - poprawność typu (lista stringów),
+  - whitelista dozwolonych elementów,
+  - limit długości MAX_CHECKLIST_ITEMS
+
+### Dodane w 1.2.0:
+- Wersje wieloużytkownikowe (checklista per użytkownik).
 
 ## 📌 Planowane funkcje
-
-- Możliwość edycji checklisty po stronie użytkownika (dodawanie, usuwanie, kategorie).
-- Wersje wieloużytkownikowe (checklista per użytkownik).
+- Edycja checklisty po stronie użytkownika (dodawanie/edycja kategorii).
 - Logowanie i autoryzacja sesji dla indywidualnych list.
-- Rejestr logów i historii zmian.
-- Interfejs administracyjny do zarządzania zawartością checklisty.
+- Podgląd historii zmian / raporty.
+- Panel administracyjny.
 
 ---
 
 ## 📁 Struktura projektu
 
-htdocs/
-├── config.env              # Konfiguracja środowiska (DEV/PROD)
-├── index.html              # Frontend (statyczny)
-├── css/                    # Style
-├── js/                     
-│ ├── checklist.js          # Logika checklisty i zapisu
-│ ├── main.js               # Inicjalizacja
-│ ├── parallax-init.js
-│ └── lib/
-│     └── interactive-bg.js
-└── py/                     # Backend Flask
-    ├── run.py              # Start dev
-    ├── wsgi.py             # Start prod (Gunicorn)
+TravelReady/
+├── onfig.env.example             # Przykładowa konfiguracja środowiskowa (DEV/PROD)
+│   pytest.ini
+├── static/                       # Frontend serwowany przez Flask
+│   ├── index.html
+│   ├── css/
+│   │   ├── main.js
+│   │   └── checklist.js
+│   ├── js/
+│   │   │   checklist.js          # Logika checklisty i zapisu
+│   │   │   main.js
+│   │   │   parallax-init.js
+│   │   │
+│   │   └───lib
+│   │           interactive-bg.js   
+│   └── images/
+│       ├── bg.jpg
+│       └── favicon.ico
+└── py/                           # Backend Flask
+    ├── run.py                    # Start dev
+    ├── wsgi.py                   # Start prod
     ├── README.md
     ├── requirements.txt
     ├── config/
     │   └── config.py       # Wczytanie pliku .env
     └── app/
-        ├── __init__.py
+        ├── __init__.py               # create_app(), konfiguracja static_folder itp.
         ├── log_config.py
         ├── error_handlers.py
-        ├── repository.py
+        ├── repository.py          # Repozytorium danych (plik JSON / per-user)
         ├── storage.py
         ├── validation.py       # centralna walidacja
         ├── data/
-        │   ├── items.py               # Lista elementów
-        │   └── checked_items.json     # Zaznaczone (lokalnie)
+        │   ├── items.py           # Statyczna lista pozycji checklisty
+        │   ├── checked_items.json
+        │   └── checked/           # (API per-user) pliki <tr_uid>.json
         ├── routes/
         │   ├── checklist_routes.py
-        │   └── debug_routes.py
-        └── services/
-            └── checklist_service.py
+        │   ├── debug_routes.py
+        │   └── frontend_routes.py
+        ├── services/
+        │   └── checklist_service.py
+        └───config
+            └── config.py
 
 ---
 

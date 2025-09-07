@@ -159,17 +159,42 @@ def assert_offline_fallback(page, timeout_ms: int = 6000):
 # TC-E-01 – DEV only: Persist zaznaczeń (localStorage)
 # ======================
 @DEV_ONLY
-def test_tc_e_01_persistence_localstorage_dev(base_url, record_video_flag):
+def test_persistence_localstorage(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, _ctx):
         # 1) Wejście na UI, krotki timeout, artefakty startowe (PNG/HTML)
         goto_ready(page, base_url, "TC_E_01")
-        # 2) Zeruje localStorage i odświeża (symulacja pierwszego uruchomienia)
-        page.evaluate("() => { try { localStorage.clear(); } catch(e) {} }")
+        wait_ui_ready(page)
+        # 2) Detekcja strategii (wystawione w JS)
+        strategy = page.evaluate("() => window.__TR_STRATEGY__ || 'local'")
+        # 3) Reset stanu
+        if strategy == "local":
+            page.evaluate("() => { try { localStorage.clear(); } catch(e) {} }")
+        else:
+            # reset API – wyzeruj zaznaczenia
+            page.request.post(f"{base_url}/api/checked", data="[]", headers={"Content-Type":"application/json"})
         page.reload(wait_until="domcontentloaded"); wait_ui_ready(page)
-        # 3) Zaznacz pierwsze 3 „checkboxy”
-        tick_first_n(page, 3, "TC_E_01")
-        # 4) Odświeża stronę i pobiera pierwsze 3 elementy (czy zachował zaznaczone)
+        # 4) Zaznacz pierwsze 3 „checkboxy”
+        # --- tu łapiemy PIERWSZY POST /api/checked po klikach ---
+        predicate = lambda r: r.url.endswith("/api/checked") and r.request.method == "POST"
+        with page.expect_response(predicate) as resp_info:
+            tick_first_n(page, 3, "TC_E_01")  # ta funkcja wywołuje 3 kliknięcia
+
+        resp = resp_info.value
+        assert resp.ok, f"POST /api/checked -> {resp.status} {resp.text()}"
+
+        # mała stabilizacja: poczekaj aż sieć ucichnie, aby ‘ostatni’ POST też doszedł
+        page.wait_for_load_state("networkidle")
+
+        # sanity check przed reloadem (szczególnie w trybie API)
+        if strategy == "api":
+            r = page.request.get(f"{base_url}/api/checked")
+            assert r.ok, f"GET /api/checked status={r.status}"
+            data = r.json()
+            assert isinstance(data, list)
+            assert len(data) >= 3, f"API zwróciło {len(data)} pozycji po klikach: {data}"
+
         page.reload(wait_until="domcontentloaded"); wait_ui_ready(page)
+
         assert all(looks_checked(cb) for cb in first_n_checkboxes(page, 3)), \
             "Brak zaznaczonych elementów."
         
@@ -179,7 +204,7 @@ def test_tc_e_01_persistence_localstorage_dev(base_url, record_video_flag):
 # TC-E-02 – PROD only: Read-only (200, <title>, brak błędów w konsoli/assetach)
 # ======================
 @PROD_ONLY
-def test_tc_e_02_homepage_readonly_prod(base_url, record_video_flag):
+def test_homepage_readonly(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, _ctx):
         # 1) Nasłuch błędów
         console_logs, response_errors = [], []
@@ -201,7 +226,7 @@ def test_tc_e_02_homepage_readonly_prod(base_url, record_video_flag):
 # TC-E-03 – DEV only: Fallback przy awarii API
 # ======================
 @DEV_ONLY
-def test_tc_e_03_fallback_api_unavailable_dev(base_url, record_video_flag):
+def test_fallback_api_unavailable(base_url, record_video_flag):
     with browser_page(record_video_flag) as (page, ctx):
         api_paths = [p.strip() for p in TR_CHECKLIST_PATH.split(",") if p.strip()] or ["/api/checklist"]
 

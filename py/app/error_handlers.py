@@ -1,8 +1,9 @@
 # app/error_handlers.py
 # Obsługa wyjątków globalnych
 
-from flask import jsonify
+from flask import jsonify, request
 from app.validation import ValidationError
+from werkzeug.exceptions import HTTPException
 
 # Rejestruje globalne obsługi błędów dla kodów HTTP i nieoczekiwanych wyjątków
 def register_error_handlers(app):
@@ -22,6 +23,17 @@ def register_error_handlers(app):
             "status": "error",
             "message": "Nie znaleziono (404)"
         }), 404
+    
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        app.logger.warning(
+            f"405 Method Not Allowed: {request.method} {request.path}"
+        )
+        # opcjonalnie: Allow = ",".join(error.valid_methods or [])
+        return jsonify({
+            "status": "error", 
+            "message": "Metoda niedozwolona (405)"
+        }), 405
 
     @app.errorhandler(500)
     def internal_server_error(error):
@@ -32,9 +44,11 @@ def register_error_handlers(app):
             "message": "Wewnętrzny błąd serwera (500)"
         }), 500
 
+    # Obsługuje każdy nieprzechwycony wyjątek
     @app.errorhandler(Exception)
     def handle_unexpected_exception(error):
-        # Obsługuje każdy nieprzechwycony wyjątek – ostatnia linia obrony
+        if isinstance(error, HTTPException):
+            return error
         app.logger.exception(f"Nieoczekiwany wyjątek: {error}")
         return jsonify({
             "status": "error",

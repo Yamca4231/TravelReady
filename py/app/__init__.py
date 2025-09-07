@@ -1,11 +1,12 @@
 ﻿# app/__init__.py
 # inicjalizacja aplikacji Flask
 
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from config.config import get_config_class
 from app.log_config import setup_logging  # Import konfiguracji logowania
 from app.routes.frontend_routes import frontend_bp
+import uuid
 
 import os
 
@@ -43,5 +44,25 @@ def create_app():
     from app.error_handlers import register_error_handlers
     register_error_handlers(app)
 
-    return app
+   # ANONIMOWY IDENTYFIKATOR UZYTKOWNIKA
+   # Tworzy żadanie o ciasteczko jeśli nie ma
+    @app.before_request
+    def _ensure_user_cookie():
+        if request.cookies.get("tr_uid"):
+            return
+        request.environ["TR_NEEDS_UID"] = "1" 
 
+    # Ustawienie ciasteczka
+    @app.after_request
+    def _set_user_cookie(resp):
+        if request.environ.get("TR_NEEDS_UID") == "1":
+            uid = str(uuid.uuid4())
+            resp.set_cookie(
+                "tr_uid",
+                uid,
+                max_age=60*60*24*365,  # 1 rok
+                httponly=True,
+                samesite="Lax",
+            )
+        return resp
+    return app

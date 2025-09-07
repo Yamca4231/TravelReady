@@ -7,11 +7,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
-
-
-# Scenariusz:
-#     Ładowanie klasy ChecklistRepository z modułu app.repository w sposób „bezpieczny”
-#     dla środowisk, gdzie moduł może być tymczasowo niedostępny.
+# Ładowanie klasy ChecklistRepository z modułu app.repository w sposób „bezpieczny”
 def _load_repo():
     try:
         repo_mod = importlib.import_module("app.repository")
@@ -22,9 +18,11 @@ def _load_repo():
         pytest.skip("Missing class ChecklistRepository in app.repository – skipping tests.")
     return ChecklistRepository
 
+# --------------------------------------------------------------------------------------
+# TESTY
+# --------------------------------------------------------------------------------------
 
-# Scenariusz:
-#   Wywołanie repo.get_all_items() do pobrania pełnej checklisty.
+# TC-U-01: Wywołanie repo.get_all_items() do pobrania pełnej checklisty.
 def test_get_all_items_returns_dict_with_sections():
     ChecklistRepository = _load_repo()
     repo = ChecklistRepository()
@@ -38,10 +36,7 @@ def test_get_all_items_returns_dict_with_sections():
         for it in items:
             assert isinstance(it, str), f"Element '{it}' in section '{section}' should be string"
 
-
-# Scenariusz:
-#   Wywołanie repo.get_all_items_flat() - pobranie płaskiej listy wszystkich pozycji 
-#   checklisty bez podziału na sekcje.
+# TC-U-02: Wywołanie repo.get_all_items_flat() - pobranie płaskiej listy wszystkich pozycji 
 def test_get_all_items_flat_is_list_of_strings():
     ChecklistRepository = _load_repo()
     repo = ChecklistRepository()
