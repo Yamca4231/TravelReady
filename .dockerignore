@@ -1,0 +1,56 @@
+# VCS / IDE
+.git
+.gitignore
+.vscode
+*.code-workspace
+
+# System / edytory
+.DS_Store
+Thumbs.db
+
+# Python cache / build
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.build
+dist
+*.egg-info
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov
+
+# Node/Front
+node_modules
+npm-debug.log
+
+# CI/Charts itp.
+charts
+secrets.dev.yaml
+values.dev.yaml
+
+# Docker/Compose (niepotrzebne wewnątrz obrazu)
+docker-compose*
+compose*
+
+# Logi i artefakty
+*.log
+artifacts
+
+# Środowiska/sekrety – NIE pieczemy ich do obrazu
+.env
+.env.*
+config.env
+
+# Pozwól na plik przykładowy (przydatny w repo)
+!config.env.example
+
+# Binaria z innych tooli
+bin
+obj
+*.dbmdl
+*.jfm
+*.*proj.user

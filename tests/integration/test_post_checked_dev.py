@@ -166,21 +166,21 @@ def test_variant_duplicates_policy_documented(join, allowed_items):
     #print(f"[PASS] TC-I-02(6) dedup — input=[{item},{item}] -> stored={got}")
 
 # TC-I-02 (część 7) - Over-limit - Długość listy > limit z config.env
-def test_variant_over_limit_rejected(join):
+def test_variant_over_limit_rejected(join, allowed_items):
     cfg = _read_env_file(CONFIG_PATH)
     limit = int(cfg.get("MAX_CHECKLIST_ITEMS_DEVELOPMENT", "200"))
 
     # Fallback, gdyby allowed_items było puste:
-    base = allowed_items or ["Paszport"]
+    base = list(allowed_items) if allowed_items else ["Paszport"]
 
     # Zbuduj listę o długości (limit + 1) przez powielenie elementów bazowych
-    factor = (limit // len(base)) + 2
+    factor = max(1, (limit // len(base)) + 2)
     too_long = (base * factor)[:limit + 1]
     assert len(too_long) == limit + 1  # sanity check testu
 
     resp = requests.post(
         join("/api/checked"),
-        data=json.dumps({"checked": too_long}),
+        json={"checked": too_long}, 
         headers={"Content-Type": "application/json"},
         timeout=5
     )
