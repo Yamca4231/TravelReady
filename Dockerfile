@@ -1,8 +1,6 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
 FROM python:3-slim
 
-EXPOSE 5000
-
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -25,4 +23,4 @@ USER appuser
 EXPOSE 5000
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "py.run:app"]
+CMD ["gunicorn","--bind","0.0.0.0:5000","--chdir","/app/py","wsgi:app"]
