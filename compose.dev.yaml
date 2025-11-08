@@ -1,5 +1,6 @@
 services:
   travelready:
+    user: "5678:5678" 
     image: travelready
     volumes:
       - tr_data:/app/py/app/data/checked
@@ -16,4 +17,4 @@ services:
       - TR_ENV=DEV
       - CONFIG_PATH=/app/config.env
 volumes:
-  tr_data:      
+  tr_data: 
